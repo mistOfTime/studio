@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useEffect, useRef } from "react"
@@ -7,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { Play, Pause, RotateCcw, Timer, Coffee, Zap } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 type TimerMode = 'focus' | 'break'
 
@@ -46,7 +46,6 @@ export default function PomodoroTimer() {
       setMode('focus')
       setTimeLeft(FOCUS_TIME)
     }
-    // Try to play a sound if possible
   }
 
   const toggleTimer = () => setIsActive(!isActive)
@@ -96,7 +95,6 @@ export default function PomodoroTimer() {
         </CardHeader>
         <CardContent className="pt-12 pb-12">
           <div className="relative flex justify-center items-center mb-12">
-             {/* Progress Circle could go here, using a simpler large text display for now */}
              <div className="text-8xl font-black tracking-tighter tabular-nums text-foreground">
                {formatTime(timeLeft)}
              </div>

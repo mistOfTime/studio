@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useStudentData } from "@/hooks/use-student-data"
@@ -20,6 +19,7 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 
 export default function Dashboard() {
   const { tasks, timerStats, quizzes, isLoaded } = useStudentData()

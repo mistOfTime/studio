@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState } from "react"
@@ -12,12 +11,11 @@ import {
   Plus, 
   Trash2, 
   Calendar as CalendarIcon, 
-  Sparkles,
-  ChevronDown,
-  ChevronUp
+  Sparkles
 } from "lucide-react"
 import { suggestTaskBreakdown } from "@/ai/flows/suggest-task-breakdown"
 import { useToast } from "@/hooks/use-toast"
+import { cn } from "@/lib/utils"
 
 export default function TaskManager() {
   const { tasks, addTask, toggleTask, deleteTask, isLoaded } = useStudentData()
@@ -42,7 +40,6 @@ export default function TaskManager() {
     setIsBreakingDown(task.id)
     try {
       const result = await suggestTaskBreakdown({ taskDescription: task.title })
-      // For simplicity, we just toast the subtasks or we could append them
       toast({
         title: "AI Suggestion for " + task.title,
         description: "Steps: " + result.subTasks.join(", "),
