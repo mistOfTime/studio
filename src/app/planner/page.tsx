@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useStudentData, StudySession } from "@/hooks/use-student-data"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -10,7 +10,9 @@ import {
   Clock,
   CalendarDays,
   Timer,
-  Hash
+  Settings,
+  X,
+  Check
 } from "lucide-react"
 import {
   Dialog,
@@ -31,24 +33,56 @@ import {
 } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
 import { cn } from "@/lib/utils"
+import { Badge } from "@/components/ui/badge"
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
-const HOURS = Array.from({ length: 14 }, (_, i) => i + 8) // 8 AM to 10 PM
+const ALL_HOURS = Array.from({ length: 24 }, (_, i) => i)
 
 export default function PlannerPage() {
-  const { sessions, addSession, deleteSession, isLoaded } = useStudentData()
+  const { 
+    sessions, 
+    addSession, 
+    updateSession, 
+    deleteSession, 
+    plannerConfig, 
+    updatePlannerConfig,
+    isLoaded 
+  } = useStudentData()
   const { toast } = useToast()
   
   const [isSessionDialogOpen, setIsSessionDialogOpen] = useState(false)
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const [viewingSession, setViewingSession] = useState<StudySession | null>(null)
+  const [isEditing, setIsEditing] = useState(false)
   
-  // Recurring Session State
+  // New Session State
   const [newSubject, setNewSubject] = useState("")
   const [newDay, setNewDay] = useState("1") 
   const [newHour, setNewHour] = useState("9") 
   const [newDuration, setNewDuration] = useState("60")
 
+  // Edit Session State
+  const [editSubject, setEditSubject] = useState("")
+  const [editDay, setEditDay] = useState("1")
+  const [editHour, setEditHour] = useState("9")
+  const [editDuration, setEditDuration] = useState("60")
+
+  // Load edit state when a session is selected
+  useEffect(() => {
+    if (viewingSession) {
+      setEditSubject(viewingSession.subject)
+      setEditDay(viewingSession.dayOfWeek.toString())
+      setEditHour(parseInt(viewingSession.startTime.split(':')[0]).toString())
+      setEditDuration(viewingSession.duration.toString())
+    }
+  }, [viewingSession])
+
   if (!isLoaded) return null
+
+  const HOURS = Array.from(
+    { length: Math.max(1, plannerConfig.endHour - plannerConfig.startHour + 1) }, 
+    (_, i) => i + plannerConfig.startHour
+  )
 
   const handleAddSession = () => {
     if (!newSubject.trim()) {
@@ -66,6 +100,25 @@ export default function PlannerPage() {
     setNewSubject("")
     setIsSessionDialogOpen(false)
     toast({ title: "Session Scheduled", description: `${newSubject} added to your weekly rhythm.` })
+  }
+
+  const handleUpdateSession = () => {
+    if (!viewingSession) return
+    if (!editSubject.trim()) {
+      toast({ title: "Error", description: "Subject cannot be empty.", variant: "destructive" })
+      return
+    }
+
+    updateSession(viewingSession.id, {
+      subject: editSubject,
+      dayOfWeek: parseInt(editDay),
+      startTime: `${editHour.padStart(2, '0')}:00`,
+      duration: parseInt(editDuration)
+    })
+
+    setIsEditing(false)
+    setViewingSession(null)
+    toast({ title: "Session Updated", description: "Changes have been saved." })
   }
 
   const openAddSessionDialog = (day: number, hour: number) => {
@@ -93,9 +146,14 @@ export default function PlannerPage() {
           <h2 className="text-3xl font-bold">Weekly Study Rhythm</h2>
           <p className="text-muted-foreground">Map out your recurring study schedule for the week.</p>
         </div>
-        <Button onClick={() => setIsSessionDialogOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" /> Schedule Session
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="icon" onClick={() => setIsSettingsOpen(true)}>
+            <Settings className="h-4 w-4" />
+          </Button>
+          <Button onClick={() => setIsSessionDialogOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" /> Schedule Session
+          </Button>
+        </div>
       </div>
 
       <Card className="overflow-hidden border-2 shadow-sm">
@@ -135,7 +193,10 @@ export default function PlannerPage() {
                       {hourSessions.map(session => (
                         <div 
                           key={session.id} 
-                          onClick={() => setViewingSession(session)}
+                          onClick={() => {
+                            setViewingSession(session);
+                            setIsEditing(false);
+                          }}
                           className="group/session relative bg-primary text-primary-foreground p-2 rounded-md text-[10px] shadow-sm animate-in fade-in zoom-in duration-200 pointer-events-auto flex-1 flex flex-col justify-between border border-primary-foreground/10 cursor-pointer hover:brightness-110 transition-all"
                         >
                           <div className="font-bold flex items-center gap-1 mb-1 min-w-0">
@@ -163,6 +224,47 @@ export default function PlannerPage() {
         </div>
       </Card>
 
+      {/* Planner Settings Dialog */}
+      <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle>Planner Settings</DialogTitle>
+            <DialogDescription>Customize your visible hour range.</DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label>Start Hour</Label>
+                <Select 
+                  value={plannerConfig.startHour.toString()} 
+                  onValueChange={(v) => updatePlannerConfig({ ...plannerConfig, startHour: parseInt(v) })}
+                >
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {ALL_HOURS.map((h) => (<SelectItem key={h} value={h.toString()}>{formatHour(h)}</SelectItem>))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-2">
+                <Label>End Hour</Label>
+                <Select 
+                  value={plannerConfig.endHour.toString()} 
+                  onValueChange={(v) => updatePlannerConfig({ ...plannerConfig, endHour: parseInt(v) })}
+                >
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {ALL_HOURS.map((h) => (<SelectItem key={h} value={h.toString()}>{formatHour(h)}</SelectItem>))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setIsSettingsOpen(false)}>Done</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Add Session Dialog */}
       <Dialog open={isSessionDialogOpen} onOpenChange={setIsSessionDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
@@ -189,7 +291,7 @@ export default function PlannerPage() {
                 <Select value={newHour} onValueChange={setNewHour}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {HOURS.map((hour) => (<SelectItem key={hour} value={hour.toString()}>{formatHour(hour)}</SelectItem>))}
+                    {ALL_HOURS.map((hour) => (<SelectItem key={hour} value={hour.toString()}>{formatHour(hour)}</SelectItem>))}
                   </SelectContent>
                 </Select>
               </div>
@@ -214,8 +316,13 @@ export default function PlannerPage() {
         </DialogContent>
       </Dialog>
 
-      {/* View Session Details Dialog */}
-      <Dialog open={!!viewingSession} onOpenChange={(open) => !open && setViewingSession(null)}>
+      {/* View/Edit Session Details Dialog */}
+      <Dialog open={!!viewingSession} onOpenChange={(open) => {
+        if (!open) {
+          setViewingSession(null);
+          setIsEditing(false);
+        }
+      }}>
         <DialogContent className="sm:max-w-[400px]">
           {viewingSession && (
             <>
@@ -226,64 +333,118 @@ export default function PlannerPage() {
                   </div>
                   <Badge variant="outline" className="ml-auto">Study Session</Badge>
                 </div>
-                <DialogTitle className="text-2xl">{viewingSession.subject}</DialogTitle>
-                <DialogDescription>Session details and schedule.</DialogDescription>
+                {isEditing ? (
+                  <div className="space-y-4 pt-2">
+                    <div className="grid gap-2">
+                      <Label>Subject</Label>
+                      <Input value={editSubject} onChange={(e) => setEditSubject(e.target.value)} />
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <DialogTitle className="text-2xl">{viewingSession.subject}</DialogTitle>
+                    <DialogDescription>Session details and schedule.</DialogDescription>
+                  </>
+                )}
               </DialogHeader>
+              
               <div className="grid gap-4 py-4">
-                <div className="flex items-center gap-4 p-3 border rounded-lg bg-muted/30">
-                  <CalendarDays className="h-5 w-5 text-muted-foreground" />
-                  <div className="flex flex-col">
-                    <span className="text-xs text-muted-foreground uppercase font-semibold">Day</span>
-                    <span className="font-medium">{DAYS[viewingSession.dayOfWeek]}</span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-4 p-3 border rounded-lg bg-muted/30">
-                  <Clock className="h-5 w-5 text-muted-foreground" />
-                  <div className="flex flex-col">
-                    <span className="text-xs text-muted-foreground uppercase font-semibold">Hours</span>
-                    <span className="font-medium">{getSessionTimeRange(viewingSession)}</span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-4 p-3 border rounded-lg bg-muted/30">
-                  <Timer className="h-5 w-5 text-muted-foreground" />
-                  <div className="flex flex-col">
-                    <span className="text-xs text-muted-foreground uppercase font-semibold">Duration</span>
-                    <span className="font-medium">{viewingSession.duration} minutes</span>
-                  </div>
-                </div>
+                {isEditing ? (
+                  <>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="grid gap-2">
+                        <Label>Day</Label>
+                        <Select value={editDay} onValueChange={setEditDay}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            {DAYS.map((day, idx) => (<SelectItem key={idx} value={idx.toString()}>{day}</SelectItem>))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="grid gap-2">
+                        <Label>Hour</Label>
+                        <Select value={editHour} onValueChange={setEditHour}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            {ALL_HOURS.map((hour) => (<SelectItem key={hour} value={hour.toString()}>{formatHour(hour)}</SelectItem>))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <div className="grid gap-2">
+                      <Label>Duration</Label>
+                      <Select value={editDuration} onValueChange={setEditDuration}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="30">30 minutes</SelectItem>
+                          <SelectItem value="60">1 hour</SelectItem>
+                          <SelectItem value="90">1.5 hours</SelectItem>
+                          <SelectItem value="120">2 hours</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex items-center gap-4 p-3 border rounded-lg bg-muted/30">
+                      <CalendarDays className="h-5 w-5 text-muted-foreground" />
+                      <div className="flex flex-col">
+                        <span className="text-xs text-muted-foreground uppercase font-semibold">Day</span>
+                        <span className="font-medium">{DAYS[viewingSession.dayOfWeek]}</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4 p-3 border rounded-lg bg-muted/30">
+                      <Clock className="h-5 w-5 text-muted-foreground" />
+                      <div className="flex flex-col">
+                        <span className="text-xs text-muted-foreground uppercase font-semibold">Hours</span>
+                        <span className="font-medium">{getSessionTimeRange(viewingSession)}</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4 p-3 border rounded-lg bg-muted/30">
+                      <Timer className="h-5 w-5 text-muted-foreground" />
+                      <div className="flex flex-col">
+                        <span className="text-xs text-muted-foreground uppercase font-semibold">Duration</span>
+                        <span className="font-medium">{viewingSession.duration} minutes</span>
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
+
               <DialogFooter className="gap-2 sm:gap-0">
-                <Button 
-                  variant="destructive" 
-                  className="sm:mr-auto"
-                  onClick={() => {
-                    deleteSession(viewingSession.id);
-                    setViewingSession(null);
-                    toast({ title: "Session Deleted", description: "Successfully removed from schedule." });
-                  }}
-                >
-                  Delete Session
-                </Button>
-                <Button variant="secondary" onClick={() => setViewingSession(null)}>
-                  Close
-                </Button>
+                {isEditing ? (
+                  <>
+                    <Button variant="ghost" onClick={() => setIsEditing(false)}>Cancel</Button>
+                    <Button onClick={handleUpdateSession}>
+                      <Check className="h-4 w-4 mr-2" /> Save Changes
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button 
+                      variant="destructive" 
+                      className="sm:mr-auto"
+                      onClick={() => {
+                        deleteSession(viewingSession.id);
+                        setViewingSession(null);
+                        toast({ title: "Session Deleted", description: "Successfully removed from schedule." });
+                      }}
+                    >
+                      Delete
+                    </Button>
+                    <Button variant="outline" onClick={() => setIsEditing(true)}>
+                      Edit
+                    </Button>
+                    <Button variant="secondary" onClick={() => setViewingSession(null)}>
+                      Close
+                    </Button>
+                  </>
+                )}
               </DialogFooter>
             </>
           )}
         </DialogContent>
       </Dialog>
     </div>
-  )
-}
-
-function Badge({ children, variant = "default", className }: { children: React.ReactNode, variant?: "default" | "outline", className?: string }) {
-  return (
-    <span className={cn(
-      "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
-      variant === "default" ? "border-transparent bg-primary text-primary-foreground" : "text-foreground",
-      className
-    )}>
-      {children}
-    </span>
   )
 }

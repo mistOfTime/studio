@@ -60,6 +60,11 @@ export interface TimerStats {
   sessionsCompleted: number
 }
 
+export interface PlannerConfig {
+  startHour: number
+  endHour: number
+}
+
 const DEFAULT_DATA = {
   tasks: [] as Task[],
   sessions: [] as StudySession[],
@@ -67,7 +72,8 @@ const DEFAULT_DATA = {
   notes: [] as Note[],
   quizzes: [] as Quiz[],
   flashcards: [] as Flashcard[],
-  timerStats: { totalFocusMinutes: 0, sessionsCompleted: 0 } as TimerStats
+  timerStats: { totalFocusMinutes: 0, sessionsCompleted: 0 } as TimerStats,
+  plannerConfig: { startHour: 8, endHour: 22 } as PlannerConfig
 }
 
 export function useStudentData() {
@@ -114,6 +120,13 @@ export function useStudentData() {
   const addSession = (session: Omit<StudySession, 'id'>) => {
     const newSession = { ...session, id: Math.random().toString(36).substr(2, 9) }
     saveData({ ...data, sessions: [...data.sessions, newSession] })
+  }
+
+  const updateSession = (id: string, updates: Partial<StudySession>) => {
+    saveData({
+      ...data,
+      sessions: data.sessions.map(s => s.id === id ? { ...s, ...updates } : s)
+    })
   }
 
   const deleteSession = (id: string) => {
@@ -179,9 +192,14 @@ export function useStudentData() {
       ...data,
       timerStats: {
         totalFocusMinutes: data.timerStats.totalFocusMinutes + minutes,
-        sessionsCompleted: data.timerStats.sessionsCompleted + 1
+        sessionsCompleted: data.sessionsCompleted + 1
       }
     })
+  }
+
+  // Planner Configuration
+  const updatePlannerConfig = (config: PlannerConfig) => {
+    saveData({ ...data, plannerConfig: config })
   }
 
   return {
@@ -191,6 +209,7 @@ export function useStudentData() {
     toggleTask,
     deleteTask,
     addSession,
+    updateSession,
     deleteSession,
     addEvent,
     deleteEvent,
@@ -201,6 +220,7 @@ export function useStudentData() {
     addScore,
     addFlashcardSet,
     deleteFlashcardSet,
-    incrementTimerStats
+    incrementTimerStats,
+    updatePlannerConfig
   }
 }
