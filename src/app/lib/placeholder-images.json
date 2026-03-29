@@ -1,0 +1,11 @@
+
+{
+  "placeholderImages": [
+    {
+      "id": "student-hero",
+      "description": "A student studying with books and a laptop",
+      "imageUrl": "https://picsum.photos/seed/student-1/1200/600",
+      "imageHint": "student studying"
+    }
+  ]
+}
