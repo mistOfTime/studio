@@ -9,7 +9,8 @@ import {
   BookOpen, 
   Clock,
   CalendarDays,
-  Timer
+  Timer,
+  Hash
 } from "lucide-react"
 import {
   Dialog,
@@ -141,8 +142,15 @@ export default function PlannerPage() {
                             <BookOpen className="h-3 w-3 shrink-0" /> 
                             <span className="truncate">{session.subject}</span>
                           </div>
-                          <div className="opacity-90 flex items-center justify-between mt-auto font-medium">
-                            <span>{getSessionTimeRange(session)}</span>
+                          <div className="opacity-90 flex flex-col gap-0.5 mt-auto font-medium">
+                            <div className="flex items-center gap-1">
+                              <Clock className="h-2.5 w-2.5" />
+                              <span>{getSessionTimeRange(session)}</span>
+                            </div>
+                            <div className="flex items-center gap-1 opacity-75">
+                              <Timer className="h-2.5 w-2.5" />
+                              <span>{session.duration} min</span>
+                            </div>
                           </div>
                         </div>
                       ))}
@@ -186,6 +194,18 @@ export default function PlannerPage() {
                 </Select>
               </div>
             </div>
+            <div className="grid gap-2">
+              <Label>Duration (Minutes)</Label>
+              <Select value={newDuration} onValueChange={setNewDuration}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="30">30 minutes</SelectItem>
+                  <SelectItem value="60">1 hour</SelectItem>
+                  <SelectItem value="90">1.5 hours</SelectItem>
+                  <SelectItem value="120">2 hours</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsSessionDialogOpen(false)}>Cancel</Button>
@@ -209,7 +229,7 @@ export default function PlannerPage() {
                 <DialogTitle className="text-2xl">{viewingSession.subject}</DialogTitle>
                 <DialogDescription>Session details and schedule.</DialogDescription>
               </DialogHeader>
-              <div className="grid gap-6 py-4">
+              <div className="grid gap-4 py-4">
                 <div className="flex items-center gap-4 p-3 border rounded-lg bg-muted/30">
                   <CalendarDays className="h-5 w-5 text-muted-foreground" />
                   <div className="flex flex-col">
@@ -217,13 +237,18 @@ export default function PlannerPage() {
                     <span className="font-medium">{DAYS[viewingSession.dayOfWeek]}</span>
                   </div>
                 </div>
-                <div className="grid grid-cols-1 gap-4">
-                  <div className="flex items-center gap-4 p-3 border rounded-lg bg-muted/30">
-                    <Clock className="h-5 w-5 text-muted-foreground" />
-                    <div className="flex flex-col">
-                      <span className="text-xs text-muted-foreground uppercase font-semibold">Time Slot</span>
-                      <span className="font-medium">{getSessionTimeRange(viewingSession)}</span>
-                    </div>
+                <div className="flex items-center gap-4 p-3 border rounded-lg bg-muted/30">
+                  <Clock className="h-5 w-5 text-muted-foreground" />
+                  <div className="flex flex-col">
+                    <span className="text-xs text-muted-foreground uppercase font-semibold">Hours</span>
+                    <span className="font-medium">{getSessionTimeRange(viewingSession)}</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4 p-3 border rounded-lg bg-muted/30">
+                  <Timer className="h-5 w-5 text-muted-foreground" />
+                  <div className="flex flex-col">
+                    <span className="text-xs text-muted-foreground uppercase font-semibold">Duration</span>
+                    <span className="font-medium">{viewingSession.duration} minutes</span>
                   </div>
                 </div>
               </div>
