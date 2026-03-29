@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useStudentData, StudySession } from "@/hooks/use-student-data"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { 
   Plus, 
@@ -10,9 +10,7 @@ import {
   Clock,
   CalendarDays,
   Timer,
-  X,
-  Check,
-  Settings
+  Check
 } from "lucide-react"
 import {
   Dialog,
@@ -79,8 +77,8 @@ export default function PlannerPage() {
   if (!isLoaded) return null
 
   const HOURS = Array.from(
-    { length: Math.max(1, plannerConfig.endHour - plannerConfig.startHour + 1) }, 
-    (_, i) => i + plannerConfig.startHour
+    { length: Math.max(1, (plannerConfig?.endHour || 22) - (plannerConfig?.startHour || 8) + 1) }, 
+    (_, i) => i + (plannerConfig?.startHour || 8)
   )
 
   const handleAddSession = () => {
@@ -306,7 +304,7 @@ export default function PlannerPage() {
                       <Label>Subject</Label>
                       <Input value={editSubject} onChange={(e) => setEditSubject(e.target.value)} />
                     </div>
-                  </>
+                  </div>
                 ) : (
                   <>
                     <DialogTitle className="text-2xl">{viewingSession.subject}</DialogTitle>
