@@ -72,7 +72,6 @@ export function useStudentData() {
     if (saved) {
       try {
         const parsed = JSON.parse(saved)
-        // Merge parsed data with DEFAULT_DATA to ensure all keys (like flashcards) exist
         setData({
           ...DEFAULT_DATA,
           ...parsed
@@ -123,6 +122,10 @@ export function useStudentData() {
     })
   }
 
+  const deleteNote = (id: string) => {
+    saveData({ ...data, notes: data.notes.filter(n => n.id !== id) })
+  }
+
   // Quizzes
   const addQuiz = (quiz: Omit<Quiz, 'id' | 'scores'>) => {
     const newQuiz = { ...quiz, id: Math.random().toString(36).substr(2, 9), scores: [] }
@@ -169,6 +172,7 @@ export function useStudentData() {
     addSession,
     addNote,
     updateNote,
+    deleteNote,
     addQuiz,
     addScore,
     addFlashcardSet,

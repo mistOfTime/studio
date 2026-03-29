@@ -2,19 +2,38 @@
 "use client"
 
 import { useState } from "react"
-import { useStudentData, Note } from "@/hooks/use-student-data"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { useStudentData } from "@/hooks/use-student-data"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { Plus, Trash2, FileText, Sparkles, Save, Search, BrainCircuit } from "lucide-react"
+import { 
+  Plus, 
+  Trash2, 
+  FileText, 
+  Sparkles, 
+  Search, 
+  BrainCircuit,
+  X
+} from "lucide-react"
 import { summarizeStudyNotes } from "@/ai/flows/summarize-study-notes"
 import { generateStudyAidsFromText } from "@/ai/flows/generate-study-aids-from-text"
 import { useToast } from "@/hooks/use-toast"
 import { cn } from "@/lib/utils"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 export default function NotesPage() {
-  const { notes, addNote, updateNote, addQuiz, addFlashcardSet, isLoaded } = useStudentData()
+  const { notes, addNote, updateNote, deleteNote, addQuiz, addFlashcardSet, isLoaded } = useStudentData()
   const { toast } = useToast()
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null)
   const [isSummarizing, setIsSummarizing] = useState(false)
@@ -30,11 +49,22 @@ export default function NotesPage() {
   )
 
   const handleCreateNote = () => {
+    const newNoteId = Math.random().toString(36).substr(2, 9)
     addNote({
       title: "Untitled Note",
       subject: "General",
       content: ""
     })
+    // Note: Since addNote doesn't return the ID, we'll let the user click it in the sidebar
+    // but in a real app you'd return the ID or handle navigation.
+  }
+
+  const handleDelete = () => {
+    if (selectedNoteId) {
+      deleteNote(selectedNoteId)
+      setSelectedNoteId(null)
+      toast({ title: "Note Deleted", description: "Your note has been permanently removed." })
+    }
   }
 
   const handleSummarize = async () => {
@@ -94,16 +124,24 @@ export default function NotesPage() {
       </div>
 
       <div className="flex-1 grid grid-cols-1 md:grid-cols-4 gap-6 overflow-hidden">
-        <Card className="md:col-span-1 flex flex-col">
+        <Card className="md:col-span-1 flex flex-col border-2">
           <CardHeader className="p-4 border-b">
-            <div className="relative">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+            <div className="relative group">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground transition-colors group-focus-within:text-primary" />
               <Input 
                 placeholder="Search notes..." 
-                className="pl-8" 
+                className="pl-9 pr-8" 
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
+              {searchTerm && (
+                <button 
+                  onClick={() => setSearchTerm("")}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 hover:bg-muted rounded-full transition-colors"
+                >
+                  <X className="h-3 w-3 text-muted-foreground" />
+                </button>
+              )}
             </div>
           </CardHeader>
           <div className="flex-1 overflow-y-auto p-2 space-y-1">
@@ -112,69 +150,103 @@ export default function NotesPage() {
                 key={note.id}
                 onClick={() => setSelectedNoteId(note.id)}
                 className={cn(
-                  "w-full text-left p-3 rounded-lg hover:bg-accent transition-colors flex flex-col gap-1",
-                  selectedNoteId === note.id && "bg-accent border"
+                  "w-full text-left p-3 rounded-lg hover:bg-accent transition-all duration-200 flex flex-col gap-1 border border-transparent",
+                  selectedNoteId === note.id && "bg-accent border-primary/20 shadow-sm"
                 )}
               >
-                <span className="font-semibold truncate">{note.title || "Untitled"}</span>
+                <span className="font-semibold truncate text-sm">{note.title || "Untitled"}</span>
                 <span className="text-xs text-muted-foreground">{note.subject}</span>
               </button>
             ))}
+            {filteredNotes.length === 0 && (
+              <div className="text-center py-8 text-muted-foreground text-xs italic">
+                No notes found matching your search.
+              </div>
+            )}
           </div>
         </Card>
 
-        <Card className="md:col-span-3 flex flex-col">
+        <Card className="md:col-span-3 flex flex-col border-2 shadow-sm">
           {selectedNote ? (
             <>
-              <CardHeader className="p-4 border-b flex flex-row items-center justify-between space-y-0">
-                <div className="flex flex-col gap-1 flex-1">
+              <CardHeader className="p-4 border-b flex flex-row items-center justify-between space-y-0 gap-4">
+                <div className="flex flex-col gap-1 flex-1 min-w-0">
                   <Input 
-                    className="text-xl font-bold border-none p-0 focus-visible:ring-0" 
+                    className="text-xl font-bold border-none p-0 h-auto focus-visible:ring-0 truncate" 
                     value={selectedNote.title}
+                    placeholder="Enter note title..."
                     onChange={(e) => updateNote(selectedNote.id, { title: e.target.value })}
                   />
-                  <div className="flex items-center gap-2">
-                    <Input 
-                      className="text-sm h-6 border-none p-0 focus-visible:ring-0 text-muted-foreground w-32" 
-                      value={selectedNote.subject}
-                      onChange={(e) => updateNote(selectedNote.id, { subject: e.target.value })}
-                    />
-                  </div>
+                  <Input 
+                    className="text-xs h-auto border-none p-0 focus-visible:ring-0 text-muted-foreground font-medium" 
+                    value={selectedNote.subject}
+                    placeholder="Subject (e.g. History)"
+                    onChange={(e) => updateNote(selectedNote.id, { subject: e.target.value })}
+                  />
                 </div>
-                <div className="flex gap-2">
+                <div className="flex items-center gap-2">
                   <Button 
-                    variant="outline" 
+                    variant="ghost" 
                     size="sm" 
                     onClick={handleSummarize}
                     disabled={isSummarizing || !selectedNote.content}
+                    className="hidden sm:flex"
                   >
-                    <Sparkles className={cn("h-4 w-4 mr-2", isSummarizing && "animate-spin")} />
+                    <Sparkles className={cn("h-4 w-4 mr-2 text-primary", isSummarizing && "animate-spin")} />
                     Summarize
                   </Button>
                   <Button 
-                    variant="secondary" 
+                    variant="ghost" 
                     size="sm" 
                     onClick={handleGenerateStudyAids}
                     disabled={isGeneratingAids || !selectedNote.content}
+                    className="hidden lg:flex"
                   >
-                    <BrainCircuit className={cn("h-4 w-4 mr-2", isGeneratingAids && "animate-spin")} />
-                    Generate Aids
+                    <BrainCircuit className={cn("h-4 w-4 mr-2 text-primary", isGeneratingAids && "animate-spin")} />
+                    Gen Aids
                   </Button>
+                  
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This action cannot be undone. This will permanently delete your note
+                          and remove it from our servers.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                          Delete Note
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
               </CardHeader>
-              <CardContent className="flex-1 p-0 overflow-hidden">
+              <CardContent className="flex-1 p-0 overflow-hidden relative">
                 <Textarea 
-                  className="h-full w-full border-none focus-visible:ring-0 resize-none p-6 text-lg"
-                  placeholder="Start writing..."
+                  className="h-full w-full border-none focus-visible:ring-0 resize-none p-8 text-base leading-relaxed"
+                  placeholder="Start capturing your thoughts..."
                   value={selectedNote.content}
                   onChange={(e) => updateNote(selectedNote.id, { content: e.target.value })}
                 />
               </CardContent>
             </>
           ) : (
-            <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground p-12">
-              <FileText className="h-16 w-16 mb-4 opacity-20" />
-              <p>Select a note to view or create a new one.</p>
+            <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground p-12 bg-muted/10">
+              <FileText className="h-20 w-20 mb-6 opacity-10" />
+              <h3 className="text-lg font-medium mb-1">Your Workspace is Empty</h3>
+              <p className="text-sm max-w-[250px] text-center mb-6">Select an existing note or create a new one to start studying.</p>
+              <Button onClick={handleCreateNote} variant="outline" size="sm">
+                <Plus className="h-4 w-4 mr-2" /> Create My First Note
+              </Button>
             </div>
           )}
         </Card>
