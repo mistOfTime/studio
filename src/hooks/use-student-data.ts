@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useEffect } from 'react'
@@ -18,6 +17,13 @@ export interface StudySession {
   startTime: string // "HH:mm"
   duration: number // minutes
   dayOfWeek: number // 0-6
+}
+
+export interface DatedEvent {
+  id: string
+  title: string
+  date: string // ISO string
+  description?: string
 }
 
 export interface Note {
@@ -57,6 +63,7 @@ export interface TimerStats {
 const DEFAULT_DATA = {
   tasks: [] as Task[],
   sessions: [] as StudySession[],
+  events: [] as DatedEvent[],
   notes: [] as Note[],
   quizzes: [] as Quiz[],
   flashcards: [] as Flashcard[],
@@ -103,7 +110,7 @@ export function useStudentData() {
     saveData({ ...data, tasks: data.tasks.filter(t => t.id !== id) })
   }
 
-  // Sessions
+  // Sessions (Weekly)
   const addSession = (session: Omit<StudySession, 'id'>) => {
     const newSession = { ...session, id: Math.random().toString(36).substr(2, 9) }
     saveData({ ...data, sessions: [...data.sessions, newSession] })
@@ -111,6 +118,16 @@ export function useStudentData() {
 
   const deleteSession = (id: string) => {
     saveData({ ...data, sessions: data.sessions.filter(s => s.id !== id) })
+  }
+
+  // Events (Dated)
+  const addEvent = (event: Omit<DatedEvent, 'id'>) => {
+    const newEvent = { ...event, id: Math.random().toString(36).substr(2, 9) }
+    saveData({ ...data, events: [...data.events, newEvent] })
+  }
+
+  const deleteEvent = (id: string) => {
+    saveData({ ...data, events: data.events.filter(e => e.id !== id) })
   }
 
   // Notes
@@ -175,6 +192,8 @@ export function useStudentData() {
     deleteTask,
     addSession,
     deleteSession,
+    addEvent,
+    deleteEvent,
     addNote,
     updateNote,
     deleteNote,
