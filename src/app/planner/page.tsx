@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useEffect } from "react"
@@ -130,6 +131,12 @@ export default function PlannerPage() {
     return hourInt > 12 ? `${hourInt - 12} PM` : `${hourInt} AM`;
   }
 
+  const formatDurationDisplay = (minutes: number) => {
+    if (minutes < 60) return `${minutes} minutes`;
+    const hours = minutes / 60;
+    return hours === 1 ? "1 hour" : `${hours} hours`;
+  }
+
   const getSessionTimeRange = (session: StudySession) => {
     const startHour = parseInt(session.startTime.split(':')[0]);
     const endHour = startHour + Math.ceil(session.duration / 60);
@@ -202,9 +209,9 @@ export default function PlannerPage() {
                               <Clock className="h-2.5 w-2.5" />
                               <span>{getSessionTimeRange(session)}</span>
                             </div>
-                            <div className="flex items-center gap-1 opacity-75">
+                            <div className="flex items-center gap-1">
                               <Timer className="h-2.5 w-2.5" />
-                              <span>{session.duration} min</span>
+                              <span>{formatDurationDisplay(session.duration)}</span>
                             </div>
                           </div>
                         </div>
@@ -250,7 +257,7 @@ export default function PlannerPage() {
               </div>
             </div>
             <div className="grid gap-2">
-              <Label>Duration (Minutes)</Label>
+              <Label>Duration</Label>
               <Select value={newDuration} onValueChange={setNewDuration}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -359,7 +366,7 @@ export default function PlannerPage() {
                       <Timer className="h-5 w-5 text-muted-foreground" />
                       <div className="flex flex-col">
                         <span className="text-xs text-muted-foreground uppercase font-semibold">Duration</span>
-                        <span className="font-medium">{viewingSession.duration} minutes</span>
+                        <span className="font-medium">{formatDurationDisplay(viewingSession.duration)}</span>
                       </div>
                     </div>
                   </>
