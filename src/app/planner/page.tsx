@@ -10,7 +10,6 @@ import {
   Clock,
   CalendarDays,
   Timer,
-  Settings,
   X,
   Check
 } from "lucide-react"
@@ -45,13 +44,11 @@ export default function PlannerPage() {
     updateSession, 
     deleteSession, 
     plannerConfig, 
-    updatePlannerConfig,
     isLoaded 
   } = useStudentData()
   const { toast } = useToast()
   
   const [isSessionDialogOpen, setIsSessionDialogOpen] = useState(false)
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const [viewingSession, setViewingSession] = useState<StudySession | null>(null)
   const [isEditing, setIsEditing] = useState(false)
   
@@ -147,9 +144,6 @@ export default function PlannerPage() {
           <p className="text-muted-foreground">Map out your recurring study schedule for the week.</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="icon" onClick={() => setIsSettingsOpen(true)}>
-            <Settings className="h-4 w-4" />
-          </Button>
           <Button onClick={() => setIsSessionDialogOpen(true)}>
             <Plus className="h-4 w-4 mr-2" /> Schedule Session
           </Button>
@@ -223,47 +217,6 @@ export default function PlannerPage() {
           ))}
         </div>
       </Card>
-
-      {/* Planner Settings Dialog */}
-      <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
-        <DialogContent className="sm:max-w-[400px]">
-          <DialogHeader>
-            <DialogTitle>Planner Settings</DialogTitle>
-            <DialogDescription>Customize your visible hour range.</DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label>Start Hour</Label>
-                <Select 
-                  value={plannerConfig.startHour.toString()} 
-                  onValueChange={(v) => updatePlannerConfig({ ...plannerConfig, startHour: parseInt(v) })}
-                >
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {ALL_HOURS.map((h) => (<SelectItem key={h} value={h.toString()}>{formatHour(h)}</SelectItem>))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid gap-2">
-                <Label>End Hour</Label>
-                <Select 
-                  value={plannerConfig.endHour.toString()} 
-                  onValueChange={(v) => updatePlannerConfig({ ...plannerConfig, endHour: parseInt(v) })}
-                >
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {ALL_HOURS.map((h) => (<SelectItem key={h} value={h.toString()}>{formatHour(h)}</SelectItem>))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button onClick={() => setIsSettingsOpen(false)}>Done</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       {/* Add Session Dialog */}
       <Dialog open={isSessionDialogOpen} onOpenChange={setIsSessionDialogOpen}>
