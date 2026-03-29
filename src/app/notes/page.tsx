@@ -1,7 +1,6 @@
-
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { useStudentData } from "@/hooks/use-student-data"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -15,7 +14,8 @@ import {
   Search, 
   BrainCircuit,
   X,
-  Type
+  Upload,
+  Loader2
 } from "lucide-react"
 import { summarizeStudyNotes } from "@/ai/flows/summarize-study-notes"
 import { generateStudyAidsFromText } from "@/ai/flows/generate-study-aids-from-text"
@@ -39,7 +39,9 @@ export default function NotesPage() {
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null)
   const [isSummarizing, setIsSummarizing] = useState(false)
   const [isGeneratingAids, setIsGeneratingAids] = useState(false)
+  const [isUploading, setIsUploading] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   if (!isLoaded) return null
 
@@ -55,6 +57,40 @@ export default function NotesPage() {
       subject: "General",
       content: ""
     })
+  }
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    setIsUploading(true)
+    const reader = new FileReader()
+    
+    reader.onload = (e) => {
+      const content = e.target?.result as string
+      addNote({
+        title: file.name.replace(/\.[^/.]+$/, ""),
+        subject: "Uploaded",
+        content: content
+      })
+      toast({ 
+        title: "File Uploaded Successfully", 
+        description: `Created a new note from "${file.name}". You can now summarize or generate study aids.` 
+      })
+      setIsUploading(false)
+      if (fileInputRef.current) fileInputRef.current.value = ""
+    }
+
+    reader.onerror = () => {
+      toast({ 
+        title: "Upload Failed", 
+        description: "Could not read the file. Please try a standard text file.", 
+        variant: "destructive" 
+      })
+      setIsUploading(false)
+    }
+
+    reader.readAsText(file)
   }
 
   const handleDelete = () => {
@@ -116,9 +152,22 @@ export default function NotesPage() {
     <div className="max-w-6xl mx-auto h-[calc(100vh-160px)] flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold">My Notes</h2>
-        <Button onClick={handleCreateNote}>
-          <Plus className="mr-2 h-4 w-4" /> New Note
-        </Button>
+        <div className="flex gap-2">
+          <input 
+            type="file" 
+            ref={fileInputRef} 
+            onChange={handleFileUpload} 
+            className="hidden" 
+            accept=".txt,.md,.text"
+          />
+          <Button variant="outline" onClick={() => fileInputRef.current?.click()} disabled={isUploading}>
+            {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
+            Upload File
+          </Button>
+          <Button onClick={handleCreateNote}>
+            <Plus className="mr-2 h-4 w-4" /> New Note
+          </Button>
+        </div>
       </div>
 
       <div className="flex-1 grid grid-cols-1 md:grid-cols-4 gap-6 overflow-hidden">
@@ -243,10 +292,15 @@ export default function NotesPage() {
             <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground p-12 bg-muted/10">
               <FileText className="h-20 w-20 mb-6 opacity-10" />
               <h3 className="text-lg font-medium mb-1">Your Workspace is Empty</h3>
-              <p className="text-sm max-w-[250px] text-center mb-6">Select an existing note or create a new one to start studying.</p>
-              <Button onClick={handleCreateNote} variant="outline" size="sm">
-                <Plus className="h-4 w-4 mr-2" /> Create My First Note
-              </Button>
+              <p className="text-sm max-w-[250px] text-center mb-6">Select an existing note, upload a file, or create a new one to start studying.</p>
+              <div className="flex gap-2">
+                <Button onClick={handleCreateNote} variant="outline" size="sm">
+                  <Plus className="h-4 w-4 mr-2" /> Create New
+                </Button>
+                <Button onClick={() => fileInputRef.current?.click()} variant="outline" size="sm">
+                  <Upload className="h-4 w-4 mr-2" /> Upload File
+                </Button>
+              </div>
             </div>
           )}
         </Card>
