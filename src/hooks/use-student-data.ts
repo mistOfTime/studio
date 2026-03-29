@@ -15,7 +15,7 @@ export interface Task {
 export interface StudySession {
   id: string
   subject: string
-  startTime: string
+  startTime: string // "HH:mm"
   duration: number // minutes
   dayOfWeek: number // 0-6
 }
@@ -109,6 +109,10 @@ export function useStudentData() {
     saveData({ ...data, sessions: [...data.sessions, newSession] })
   }
 
+  const deleteSession = (id: string) => {
+    saveData({ ...data, sessions: data.sessions.filter(s => s.id !== id) })
+  }
+
   // Notes
   const addNote = (note: Omit<Note, 'id' | 'lastModified'>) => {
     const newNote = { ...note, id: Math.random().toString(36).substr(2, 9), lastModified: new Date().toISOString() }
@@ -170,6 +174,7 @@ export function useStudentData() {
     toggleTask,
     deleteTask,
     addSession,
+    deleteSession,
     addNote,
     updateNote,
     deleteNote,
