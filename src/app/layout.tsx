@@ -1,9 +1,9 @@
-
 import type { Metadata } from 'next';
 import './globals.css';
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import { NavSidebar } from '@/components/nav-sidebar';
 import { Toaster } from '@/components/ui/toaster';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 export const metadata: Metadata = {
   title: 'Student OS - Your Academic Workspace',
@@ -16,7 +16,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
@@ -31,6 +31,9 @@ export default function RootLayout({
                 <SidebarTrigger />
                 <div className="w-full flex-1">
                   <h1 className="text-sm font-medium text-muted-foreground">Workspace</h1>
+                </div>
+                <div className="flex items-center gap-2">
+                  <ThemeToggle />
                 </div>
               </header>
               <main className="flex-1 overflow-auto p-4 md:p-6 lg:p-8">
