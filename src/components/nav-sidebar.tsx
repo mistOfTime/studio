@@ -1,4 +1,3 @@
-
 "use client"
 
 import Link from "next/link"
@@ -10,7 +9,6 @@ import {
   FileText, 
   Brain, 
   Timer,
-  Settings,
   GraduationCap
 } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -21,7 +19,6 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarFooter,
   SidebarGroup,
   SidebarGroupLabel,
   SidebarGroupContent
@@ -74,16 +71,6 @@ export function NavSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter className="border-t p-4">
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton tooltip="Settings">
-              <Settings className="h-4 w-4" />
-              <span>Settings</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarFooter>
     </Sidebar>
   )
 }
