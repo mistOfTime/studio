@@ -8,7 +8,6 @@ import {
   Plus, 
   BookOpen, 
   Clock,
-  X,
   CalendarDays,
   Timer
 } from "lucide-react"
@@ -74,11 +73,16 @@ export default function PlannerPage() {
     setIsSessionDialogOpen(true);
   }
 
-  const formatHour = (hourStr: string) => {
-    const hour = parseInt(hourStr.split(':')[0]);
-    if (hour === 0) return "12 AM";
-    if (hour === 12) return "12 PM";
-    return hour > 12 ? `${hour - 12} PM` : `${hour} AM`;
+  const formatHour = (hourInt: number) => {
+    if (hourInt === 0) return "12 AM";
+    if (hourInt === 12) return "12 PM";
+    return hourInt > 12 ? `${hourInt - 12} PM` : `${hourInt} AM`;
+  }
+
+  const getSessionTimeRange = (session: StudySession) => {
+    const startHour = parseInt(session.startTime.split(':')[0]);
+    const endHour = startHour + Math.ceil(session.duration / 60);
+    return `${formatHour(startHour)} - ${formatHour(endHour)}`;
   }
 
   return (
@@ -108,7 +112,7 @@ export default function PlannerPage() {
           {HOURS.map((hour) => (
             <div key={hour} className="grid grid-cols-8 h-24 border-b relative">
               <div className="p-2 border-r text-[10px] font-bold text-muted-foreground text-right pr-4 bg-muted/5 flex items-start justify-end pt-1 sticky left-0 z-20">
-                {hour > 12 ? `${hour - 12} PM` : `${hour} AM`}
+                {formatHour(hour)}
               </div>
               
               {DAYS.map((_, dayIdx) => {
@@ -137,8 +141,8 @@ export default function PlannerPage() {
                             <BookOpen className="h-3 w-3 shrink-0" /> 
                             <span className="truncate">{session.subject}</span>
                           </div>
-                          <div className="opacity-90 flex items-center justify-between mt-auto">
-                            <span>{session.duration}m</span>
+                          <div className="opacity-90 flex items-center justify-between mt-auto font-medium">
+                            <span>{getSessionTimeRange(session)}</span>
                           </div>
                         </div>
                       ))}
@@ -177,7 +181,7 @@ export default function PlannerPage() {
                 <Select value={newHour} onValueChange={setNewHour}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {HOURS.map((hour) => (<SelectItem key={hour} value={hour.toString()}>{hour > 12 ? `${hour - 12} PM` : `${hour} AM`}</SelectItem>))}
+                    {HOURS.map((hour) => (<SelectItem key={hour} value={hour.toString()}>{formatHour(hour)}</SelectItem>))}
                   </SelectContent>
                 </Select>
               </div>
@@ -213,19 +217,12 @@ export default function PlannerPage() {
                     <span className="font-medium">{DAYS[viewingSession.dayOfWeek]}</span>
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4">
                   <div className="flex items-center gap-4 p-3 border rounded-lg bg-muted/30">
                     <Clock className="h-5 w-5 text-muted-foreground" />
                     <div className="flex flex-col">
-                      <span className="text-xs text-muted-foreground uppercase font-semibold">Time</span>
-                      <span className="font-medium">{formatHour(viewingSession.startTime)}</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4 p-3 border rounded-lg bg-muted/30">
-                    <Timer className="h-5 w-5 text-muted-foreground" />
-                    <div className="flex flex-col">
-                      <span className="text-xs text-muted-foreground uppercase font-semibold">Duration</span>
-                      <span className="font-medium">{viewingSession.duration} Minutes</span>
+                      <span className="text-xs text-muted-foreground uppercase font-semibold">Time Slot</span>
+                      <span className="font-medium">{getSessionTimeRange(viewingSession)}</span>
                     </div>
                   </div>
                 </div>
