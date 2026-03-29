@@ -38,15 +38,15 @@ export function NavSidebar() {
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader className="border-b px-6 py-4">
-        <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+      <SidebarHeader className="border-b h-14 flex items-center justify-center group-data-[collapsible=icon]:px-0 px-4">
+        <Link href="/" className="flex items-center gap-3 w-full group-data-[collapsible=icon]:justify-center">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
             <GraduationCap className="h-5 w-5" />
           </div>
-          <span className="text-xl font-bold tracking-tight group-data-[collapsible=icon]:hidden">
+          <span className="text-lg font-bold tracking-tight truncate group-data-[collapsible=icon]:hidden">
             Student OS
           </span>
-        </div>
+        </Link>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
