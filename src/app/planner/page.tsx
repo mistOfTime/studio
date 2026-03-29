@@ -139,16 +139,6 @@ export default function PlannerPage() {
                           </div>
                           <div className="opacity-90 flex items-center justify-between mt-auto">
                             <span>{session.duration}m</span>
-                            <button 
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                deleteSession(session.id);
-                                toast({ title: "Deleted", description: "Session removed." });
-                              }}
-                              className="p-1 hover:bg-white/20 rounded transition-colors"
-                            >
-                              <X className="h-3 w-3" />
-                            </button>
                           </div>
                         </div>
                       ))}
