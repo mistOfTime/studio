@@ -22,7 +22,7 @@ import {
 import { cn } from "@/lib/utils"
 
 export default function QuizPage() {
-  const { quizzes, flashcards, isLoaded, addScore, deleteFlashcardSet } = useStudentData()
+  const { quizzes = [], flashcards = [], isLoaded, addScore } = useStudentData()
   
   // Quiz State
   const [activeQuizId, setActiveQuizId] = useState<string | null>(null)
@@ -63,7 +63,9 @@ export default function QuizPage() {
       setSelectedAnswer(null)
     } else {
       setIsQuizFinished(true)
-      addScore(activeQuizId!, Math.round((quizScore / (activeQuiz?.questions.length || 1)) * 100))
+      if (activeQuizId) {
+        addScore(activeQuizId, Math.round((quizScore / (activeQuiz?.questions.length || 1)) * 100))
+      }
     }
   }
 
@@ -146,7 +148,7 @@ export default function QuizPage() {
         <p className="text-xl text-muted-foreground mb-8">
           You scored {quizScore} out of {activeQuiz?.questions.length}
           <br />
-          ({Math.round((quizScore / (activeQuiz?.questions.length || 1)) * 100)}%)
+          ({activeQuiz ? Math.round((quizScore / (activeQuiz.questions.length || 1)) * 100) : 0}%)
         </p>
         <Button size="lg" className="w-full" onClick={() => setActiveQuizId(null)}>
           Back to Dashboard
@@ -179,14 +181,14 @@ export default function QuizPage() {
             )}>
               {/* Front */}
               <Card className="absolute inset-0 backface-hidden flex items-center justify-center p-12 text-center shadow-xl border-2">
-                <p className="text-2xl font-medium">{card.front}</p>
+                <p className="text-2xl font-medium">{card?.front || "End of Deck"}</p>
                 <div className="absolute bottom-4 text-xs text-muted-foreground flex items-center gap-1">
                   <RotateCcw className="h-3 w-3" /> Click to flip
                 </div>
               </Card>
               {/* Back */}
               <Card className="absolute inset-0 backface-hidden rotate-y-180 flex items-center justify-center p-12 text-center shadow-xl border-2 bg-primary/5">
-                <p className="text-xl leading-relaxed">{card.back}</p>
+                <p className="text-xl leading-relaxed">{card?.back || "..."}</p>
               </Card>
             </div>
           </div>
@@ -229,7 +231,7 @@ export default function QuizPage() {
         </TabsList>
 
         <TabsContent value="quizzes">
-          {quizzes.length > 0 ? (
+          {quizzes && quizzes.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {quizzes.map(quiz => (
                 <Card key={quiz.id} className="hover:shadow-md transition-shadow">
@@ -238,14 +240,14 @@ export default function QuizPage() {
                       <div className="p-2 bg-primary/10 rounded-lg">
                         <Brain className="h-5 w-5 text-primary" />
                       </div>
-                      <Badge variant="outline">{quiz.questions.length} Qs</Badge>
+                      <Badge variant="outline">{(quiz.questions || []).length} Qs</Badge>
                     </div>
                     <CardTitle className="mt-4">{quiz.title}</CardTitle>
                     <CardDescription>{quiz.subject}</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="text-sm text-muted-foreground">
-                      Best Score: {quiz.scores.length > 0 ? `${Math.max(...quiz.scores.map(s => s.score))}%` : 'No attempts yet'}
+                      Best Score: {quiz.scores && quiz.scores.length > 0 ? `${Math.max(...quiz.scores.map(s => s.score))}%` : 'No attempts yet'}
                     </div>
                     <Button className="w-full" onClick={() => startQuiz(quiz.id)}>
                       <Play className="mr-2 h-4 w-4" /> Start Quiz
@@ -264,7 +266,7 @@ export default function QuizPage() {
         </TabsContent>
 
         <TabsContent value="flashcards">
-          {flashcards.length > 0 ? (
+          {flashcards && flashcards.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {flashcards.map(set => (
                 <Card key={set.id} className="hover:shadow-md transition-shadow">
@@ -273,7 +275,7 @@ export default function QuizPage() {
                       <div className="p-2 bg-blue-500/10 rounded-lg">
                         <BookOpen className="h-5 w-5 text-blue-500" />
                       </div>
-                      <Badge variant="outline">{set.cards.length} Cards</Badge>
+                      <Badge variant="outline">{(set.cards || []).length} Cards</Badge>
                     </div>
                     <CardTitle className="mt-4">{set.title}</CardTitle>
                     <CardDescription>{set.subject}</CardDescription>

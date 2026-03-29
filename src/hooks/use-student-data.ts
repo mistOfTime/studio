@@ -71,7 +71,12 @@ export function useStudentData() {
     const saved = localStorage.getItem('student_os_data')
     if (saved) {
       try {
-        setData(JSON.parse(saved))
+        const parsed = JSON.parse(saved)
+        // Merge parsed data with DEFAULT_DATA to ensure all keys (like flashcards) exist
+        setData({
+          ...DEFAULT_DATA,
+          ...parsed
+        })
       } catch (e) {
         console.error("Failed to parse student data", e)
       }
