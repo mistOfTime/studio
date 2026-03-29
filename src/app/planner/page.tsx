@@ -10,7 +10,8 @@ import {
   BookOpen, 
   Trash2, 
   Calendar as CalendarIcon,
-  X
+  X,
+  Info
 } from "lucide-react"
 import {
   Dialog,
@@ -30,6 +31,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
+import { cn } from "@/lib/utils"
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 const HOURS = Array.from({ length: 14 }, (_, i) => i + 8) // 8 AM to 10 PM
@@ -64,12 +66,18 @@ export default function PlannerPage() {
     toast({ title: "Session Scheduled", description: `${newSubject} added to your calendar.` })
   }
 
+  const openAddDialog = (day: number, hour: number) => {
+    setNewDay(day.toString());
+    setNewHour(hour.toString());
+    setIsDialogOpen(true);
+  }
+
   return (
     <div className="max-w-6xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex flex-col gap-1">
           <h2 className="text-3xl font-bold">Study Planner</h2>
-          <p className="text-muted-foreground">Plan your weekly recurring study schedule.</p>
+          <p className="text-muted-foreground">Build your weekly recurring study rhythm.</p>
         </div>
         <div className="flex gap-2">
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -152,17 +160,20 @@ export default function PlannerPage() {
             <CalendarIcon className="h-4 w-4 text-muted-foreground" />
           </div>
           {DAYS.map((day, idx) => (
-            <div key={idx} className="p-4 text-center font-bold border-r last:border-r-0">
+            <div key={idx} className="p-4 text-center font-bold border-r last:border-r-0 text-sm">
               {day}
             </div>
           ))}
         </div>
-        <div className="h-[700px] overflow-y-auto relative">
+        <div className="h-[700px] overflow-y-auto relative bg-background">
           {HOURS.map((hour) => (
-            <div key={hour} className="grid grid-cols-8 h-24 border-b relative group">
-              <div className="p-2 border-r text-[10px] font-bold text-muted-foreground text-right pr-4 bg-muted/5 flex items-start justify-end pt-1">
+            <div key={hour} className="grid grid-cols-8 h-24 border-b relative">
+              {/* Hour Label */}
+              <div className="p-2 border-r text-[10px] font-bold text-muted-foreground text-right pr-4 bg-muted/5 flex items-start justify-end pt-1 sticky left-0 z-20">
                 {hour > 12 ? `${hour - 12} PM` : `${hour} AM`}
               </div>
+              
+              {/* Day Columns */}
               {DAYS.map((_, dayIdx) => {
                 const hourSessions = sessions.filter(s => 
                   s.dayOfWeek === dayIdx && 
@@ -170,44 +181,46 @@ export default function PlannerPage() {
                 )
 
                 return (
-                  <div key={dayIdx} className="border-r last:border-r-0 relative hover:bg-accent/30 transition-colors p-1 group/slot">
-                    {hourSessions.map(session => (
-                      <div 
-                        key={session.id} 
-                        className="group/session relative bg-primary text-primary-foreground p-2 rounded-md text-[10px] z-10 shadow-md overflow-hidden animate-in fade-in zoom-in duration-200"
-                        style={{ height: '100%' }}
-                      >
-                        <div className="font-bold flex items-center gap-1 mb-1">
-                          <BookOpen className="h-3 w-3 shrink-0" /> 
-                          <span className="truncate">{session.subject}</span>
+                  <div 
+                    key={dayIdx} 
+                    className="border-r last:border-r-0 relative group/slot p-1 bg-transparent"
+                  >
+                    {/* Clickable Background Slot */}
+                    <button 
+                      onClick={() => openAddDialog(dayIdx, hour)}
+                      className="absolute inset-0 z-0 opacity-0 group-hover/slot:opacity-100 hover:bg-accent/50 transition-all flex items-center justify-center cursor-pointer"
+                      aria-label={`Schedule session for ${DAYS[dayIdx]} at ${hour > 12 ? `${hour - 12} PM` : `${hour} AM`}`}
+                    >
+                      <Plus className="h-5 w-5 text-primary/30" />
+                    </button>
+
+                    {/* Session Cards - Foreground Layer */}
+                    <div className="relative z-10 flex flex-col gap-1 h-full pointer-events-none">
+                      {hourSessions.map(session => (
+                        <div 
+                          key={session.id} 
+                          className="group/session relative bg-primary text-primary-foreground p-2 rounded-md text-[10px] shadow-sm overflow-hidden animate-in fade-in zoom-in duration-200 pointer-events-auto flex-1 flex flex-col justify-between border border-primary-foreground/10"
+                        >
+                          <div className="font-bold flex items-center gap-1 mb-1 min-w-0">
+                            <BookOpen className="h-3 w-3 shrink-0" /> 
+                            <span className="truncate">{session.subject}</span>
+                          </div>
+                          <div className="opacity-90 flex items-center justify-between mt-auto">
+                            <span>{session.duration}m</span>
+                            <button 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                deleteSession(session.id);
+                                toast({ title: "Deleted", description: "Session removed." });
+                              }}
+                              className="p-1 hover:bg-white/20 rounded transition-colors"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </div>
                         </div>
-                        <div className="opacity-80 flex items-center justify-between">
-                          <span>{session.duration}m</span>
-                          <button 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              deleteSession(session.id);
-                              toast({ title: "Deleted", description: "Session removed." });
-                            }}
-                            className="p-1 hover:bg-white/20 rounded opacity-0 group-hover/session:opacity-100 transition-opacity"
-                          >
-                            <X className="h-3 w-3" />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                    {!hourSessions.length && (
-                      <button 
-                        onClick={() => {
-                          setNewDay(dayIdx.toString());
-                          setNewHour(hour.toString());
-                          setIsDialogOpen(true);
-                        }}
-                        className="absolute inset-0 opacity-0 group-hover/slot:opacity-100 flex items-center justify-center"
-                      >
-                        <Plus className="h-4 w-4 text-primary/40" />
-                      </button>
-                    )}
+                      ))}
+                    </div>
                   </div>
                 )
               })}
@@ -216,12 +229,18 @@ export default function PlannerPage() {
         </div>
       </Card>
       
-      <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground">
-        <div className="flex items-center gap-1">
-          <div className="h-3 w-3 rounded-full bg-primary" /> Planned Session
+      <div className="flex flex-wrap items-center justify-center gap-8 text-xs text-muted-foreground bg-muted/30 p-4 rounded-xl border border-dashed">
+        <div className="flex items-center gap-2">
+          <div className="h-3 w-3 rounded-sm bg-primary shadow-sm" /> 
+          <span className="font-medium">Planned Session</span>
         </div>
-        <div className="flex items-center gap-1">
-          <Plus className="h-3 w-3" /> Click empty slot to schedule
+        <div className="flex items-center gap-2">
+          <Plus className="h-4 w-4 text-primary" /> 
+          <span>Click any empty slot to schedule</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <Info className="h-4 w-4 text-muted-foreground" />
+          <span>Sessions recur weekly automatically</span>
         </div>
       </div>
     </div>
