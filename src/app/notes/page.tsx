@@ -7,15 +7,18 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { Plus, Trash2, FileText, Sparkles, Save, Search } from "lucide-react"
+import { Plus, Trash2, FileText, Sparkles, Save, Search, BrainCircuit } from "lucide-react"
 import { summarizeStudyNotes } from "@/ai/flows/summarize-study-notes"
+import { generateStudyAidsFromText } from "@/ai/flows/generate-study-aids-from-text"
 import { useToast } from "@/hooks/use-toast"
+import { cn } from "@/lib/utils"
 
 export default function NotesPage() {
-  const { notes, addNote, updateNote, isLoaded } = useStudentData()
+  const { notes, addNote, updateNote, addQuiz, addFlashcardSet, isLoaded } = useStudentData()
   const { toast } = useToast()
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null)
   const [isSummarizing, setIsSummarizing] = useState(false)
+  const [isGeneratingAids, setIsGeneratingAids] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
 
   if (!isLoaded) return null
@@ -47,6 +50,37 @@ export default function NotesPage() {
       toast({ title: "Error", description: "Failed to generate summary.", variant: "destructive" })
     } finally {
       setIsSummarizing(false)
+    }
+  }
+
+  const handleGenerateStudyAids = async () => {
+    if (!selectedNote || !selectedNote.content) return
+    setIsGeneratingAids(true)
+    try {
+      const result = await generateStudyAidsFromText({ text: selectedNote.content })
+      
+      // Save Quiz
+      addQuiz({
+        title: `Quiz: ${selectedNote.title}`,
+        subject: selectedNote.subject,
+        questions: result.quizQuestions
+      })
+
+      // Save Flashcards
+      addFlashcardSet({
+        title: `Cards: ${selectedNote.title}`,
+        subject: selectedNote.subject,
+        cards: result.flashcards
+      })
+
+      toast({ 
+        title: "Study Aids Generated!", 
+        description: "A new quiz and flashcard set have been added to your collection." 
+      })
+    } catch (e) {
+      toast({ title: "Error", description: "Failed to generate study aids.", variant: "destructive" })
+    } finally {
+      setIsGeneratingAids(false)
     }
   }
 
@@ -116,6 +150,15 @@ export default function NotesPage() {
                   >
                     <Sparkles className={cn("h-4 w-4 mr-2", isSummarizing && "animate-spin")} />
                     Summarize
+                  </Button>
+                  <Button 
+                    variant="secondary" 
+                    size="sm" 
+                    onClick={handleGenerateStudyAids}
+                    disabled={isGeneratingAids || !selectedNote.content}
+                  >
+                    <BrainCircuit className={cn("h-4 w-4 mr-2", isGeneratingAids && "animate-spin")} />
+                    Generate Aids
                   </Button>
                 </div>
               </CardHeader>

@@ -37,8 +37,16 @@ export interface QuizQuestion {
 export interface Quiz {
   id: string
   title: string
+  subject: string
   questions: QuizQuestion[]
   scores: { date: string; score: number }[]
+}
+
+export interface Flashcard {
+  id: string
+  title: string
+  subject: string
+  cards: { front: string; back: string }[]
 }
 
 export interface TimerStats {
@@ -51,6 +59,7 @@ const DEFAULT_DATA = {
   sessions: [] as StudySession[],
   notes: [] as Note[],
   quizzes: [] as Quiz[],
+  flashcards: [] as Flashcard[],
   timerStats: { totalFocusMinutes: 0, sessionsCompleted: 0 } as TimerStats
 }
 
@@ -125,6 +134,16 @@ export function useStudentData() {
     saveData({ ...data, quizzes: newQuizzes })
   }
 
+  // Flashcards
+  const addFlashcardSet = (flashcard: Omit<Flashcard, 'id'>) => {
+    const newSet = { ...flashcard, id: Math.random().toString(36).substr(2, 9) }
+    saveData({ ...data, flashcards: [...data.flashcards, newSet] })
+  }
+
+  const deleteFlashcardSet = (id: string) => {
+    saveData({ ...data, flashcards: data.flashcards.filter(f => f.id !== id) })
+  }
+
   // Timer
   const incrementTimerStats = (minutes: number) => {
     saveData({
@@ -147,6 +166,8 @@ export function useStudentData() {
     updateNote,
     addQuiz,
     addScore,
+    addFlashcardSet,
+    deleteFlashcardSet,
     incrementTimerStats
   }
 }
