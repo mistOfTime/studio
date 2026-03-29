@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useEffect } from "react"
@@ -12,7 +11,8 @@ import {
   CalendarDays,
   Timer,
   X,
-  Check
+  Check,
+  Settings
 } from "lucide-react"
 import {
   Dialog,
@@ -34,6 +34,7 @@ import {
 import { useToast } from "@/hooks/use-toast"
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 const ALL_HOURS = Array.from({ length: 24 }, (_, i) => i)
@@ -132,7 +133,7 @@ export default function PlannerPage() {
   }
 
   const formatDurationDisplay = (minutes: number) => {
-    if (minutes < 60) return `${minutes} minutes`;
+    if (minutes < 60) return `${minutes} min`;
     const hours = minutes / 60;
     return hours === 1 ? "1 hour" : `${hours} hours`;
   }
@@ -144,85 +145,90 @@ export default function PlannerPage() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
+    <div className="max-w-6xl mx-auto space-y-6 px-4 md:px-0">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex flex-col gap-1">
-          <h2 className="text-3xl font-bold">Weekly Study Rhythm</h2>
-          <p className="text-muted-foreground">Map out your recurring study schedule for the week.</p>
+          <h2 className="text-2xl md:text-3xl font-bold">Weekly Study Rhythm</h2>
+          <p className="text-sm text-muted-foreground">Map out your recurring study schedule for the week.</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button onClick={() => setIsSessionDialogOpen(true)}>
+          <Button onClick={() => setIsSessionDialogOpen(true)} className="w-full md:w-auto">
             <Plus className="h-4 w-4 mr-2" /> Schedule Session
           </Button>
         </div>
       </div>
 
       <Card className="overflow-hidden border-2 shadow-sm">
-        <div className="grid grid-cols-8 border-b bg-muted/30">
-          <div className="p-4 border-r flex items-center justify-center">
-            <Clock className="h-4 w-4 text-muted-foreground" />
-          </div>
-          {DAYS.map((day, idx) => (
-            <div key={idx} className="p-4 text-center font-bold border-r last:border-r-0 text-sm">
-              {day}
-            </div>
-          ))}
-        </div>
-        <div className="h-[700px] overflow-y-auto relative bg-background">
-          {HOURS.map((hour) => (
-            <div key={hour} className="grid grid-cols-8 h-24 border-b relative">
-              <div className="p-2 border-r text-[10px] font-bold text-muted-foreground text-right pr-4 bg-muted/5 flex items-start justify-end pt-1 sticky left-0 z-20">
-                {formatHour(hour)}
+        <ScrollArea className="w-full">
+          <div className="min-w-[800px]">
+            <div className="grid grid-cols-8 border-b bg-muted/30">
+              <div className="p-4 border-r flex items-center justify-center">
+                <Clock className="h-4 w-4 text-muted-foreground" />
               </div>
-              
-              {DAYS.map((_, dayIdx) => {
-                const hourSessions = sessions.filter(s => 
-                  s.dayOfWeek === dayIdx && 
-                  parseInt(s.startTime.split(':')[0]) === hour
-                )
-
-                return (
-                  <div key={dayIdx} className="border-r last:border-r-0 relative group/slot p-1 bg-transparent">
-                    <button 
-                      onClick={() => openAddSessionDialog(dayIdx, hour)}
-                      className="absolute inset-0 z-0 opacity-0 group-hover/slot:opacity-100 hover:bg-accent/50 transition-all flex items-center justify-center cursor-pointer"
-                    >
-                      <Plus className="h-5 w-5 text-primary/30" />
-                    </button>
-
-                    <div className="relative z-10 flex flex-col gap-1 h-full pointer-events-none">
-                      {hourSessions.map(session => (
-                        <div 
-                          key={session.id} 
-                          onClick={() => {
-                            setViewingSession(session);
-                            setIsEditing(false);
-                          }}
-                          className="group/session relative bg-primary text-primary-foreground p-2 rounded-md text-[10px] shadow-sm animate-in fade-in zoom-in duration-200 pointer-events-auto flex-1 flex flex-col justify-between border border-primary-foreground/10 cursor-pointer hover:brightness-110 transition-all"
-                        >
-                          <div className="font-bold flex items-center gap-1 mb-1 min-w-0">
-                            <BookOpen className="h-3 w-3 shrink-0" /> 
-                            <span className="truncate">{session.subject}</span>
-                          </div>
-                          <div className="opacity-90 flex flex-col gap-0.5 mt-auto font-medium">
-                            <div className="flex items-center gap-1">
-                              <Clock className="h-2.5 w-2.5" />
-                              <span>{getSessionTimeRange(session)}</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Timer className="h-2.5 w-2.5" />
-                              <span>{formatDurationDisplay(session.duration)}</span>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )
-              })}
+              {DAYS.map((day, idx) => (
+                <div key={idx} className="p-4 text-center font-bold border-r last:border-r-0 text-sm">
+                  {day}
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
+            <div className="h-[700px] overflow-y-auto relative bg-background">
+              {HOURS.map((hour) => (
+                <div key={hour} className="grid grid-cols-8 h-24 border-b relative">
+                  <div className="p-2 border-r text-[10px] font-bold text-muted-foreground text-right pr-4 bg-muted/5 flex items-start justify-end pt-1 sticky left-0 z-20">
+                    {formatHour(hour)}
+                  </div>
+                  
+                  {DAYS.map((_, dayIdx) => {
+                    const hourSessions = sessions.filter(s => 
+                      s.dayOfWeek === dayIdx && 
+                      parseInt(s.startTime.split(':')[0]) === hour
+                    )
+
+                    return (
+                      <div key={dayIdx} className="border-r last:border-r-0 relative group/slot p-1 bg-transparent">
+                        <button 
+                          onClick={() => openAddSessionDialog(dayIdx, hour)}
+                          className="absolute inset-0 z-0 opacity-0 group-hover/slot:opacity-100 hover:bg-accent/50 transition-all flex items-center justify-center cursor-pointer"
+                        >
+                          <Plus className="h-5 w-5 text-primary/30" />
+                        </button>
+
+                        <div className="relative z-10 flex flex-col gap-1 h-full pointer-events-none">
+                          {hourSessions.map(session => (
+                            <div 
+                              key={session.id} 
+                              onClick={() => {
+                                setViewingSession(session);
+                                setIsEditing(false);
+                              }}
+                              className="group/session relative bg-primary text-primary-foreground p-2 rounded-md text-[10px] shadow-sm animate-in fade-in zoom-in duration-200 pointer-events-auto flex-1 flex flex-col justify-between border border-primary-foreground/10 cursor-pointer hover:brightness-110 transition-all"
+                            >
+                              <div className="font-bold flex items-center gap-1 mb-1 min-w-0">
+                                <BookOpen className="h-3 w-3 shrink-0" /> 
+                                <span className="truncate">{session.subject}</span>
+                              </div>
+                              <div className="opacity-90 flex flex-col gap-0.5 mt-auto font-medium">
+                                <div className="flex items-center gap-1">
+                                  <Clock className="h-2.5 w-2.5" />
+                                  <span>{getSessionTimeRange(session)}</span>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <Timer className="h-2.5 w-2.5" />
+                                  <span>{formatDurationDisplay(session.duration)}</span>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              ))}
+            </div>
+          </div>
+          <ScrollBar orientation="horizontal" />
+        </ScrollArea>
       </Card>
 
       {/* Add Session Dialog */}
@@ -300,7 +306,7 @@ export default function PlannerPage() {
                       <Label>Subject</Label>
                       <Input value={editSubject} onChange={(e) => setEditSubject(e.target.value)} />
                     </div>
-                  </div>
+                  </>
                 ) : (
                   <>
                     <DialogTitle className="text-2xl">{viewingSession.subject}</DialogTitle>

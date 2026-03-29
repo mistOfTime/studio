@@ -24,7 +24,7 @@ import { cn } from "@/lib/utils"
 export default function Dashboard() {
   const { tasks, timerStats, quizzes, isLoaded } = useStudentData()
 
-  if (!isLoaded) return <div className="p-8 text-center">Loading your workspace...</div>
+  if (!isLoaded) return <div className="p-8 text-center">Loading workspace...</div>
 
   const completedTasks = tasks.filter(t => t.completed).length
   const totalTasks = tasks.length
@@ -39,13 +39,13 @@ export default function Dashboard() {
   const recentTasks = tasks.filter(t => !t.completed).slice(0, 3)
 
   return (
-    <div className="space-y-8 max-w-6xl mx-auto">
+    <div className="space-y-6 md:space-y-8 max-w-6xl mx-auto px-1 md:px-0">
       <div className="flex flex-col gap-2">
-        <h2 className="text-3xl font-bold tracking-tight">Welcome back!</h2>
-        <p className="text-muted-foreground">Here's an overview of your academic progress.</p>
+        <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Welcome back!</h2>
+        <p className="text-sm md:text-base text-muted-foreground">Here's your academic progress at a glance.</p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Tasks Completed</CardTitle>
@@ -75,7 +75,7 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{Math.round(averageQuizScore)}%</div>
-            <p className="text-xs text-muted-foreground mt-1">Across all completed quizzes</p>
+            <p className="text-xs text-muted-foreground mt-1">Across all quizzes</p>
           </CardContent>
         </Card>
         <Card>
@@ -85,39 +85,39 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">Good</div>
-            <p className="text-xs text-muted-foreground mt-1">You're staying consistent!</p>
+            <p className="text-xs text-muted-foreground mt-1">Consistency is key!</p>
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-        <Card className="col-span-4">
+      <div className="grid gap-4 grid-cols-1 lg:grid-cols-7">
+        <Card className="lg:col-span-4">
           <CardHeader>
-            <CardTitle>Upcoming Tasks</CardTitle>
-            <CardDescription>Don't forget these pending assignments.</CardDescription>
+            <CardTitle className="text-lg md:text-xl">Upcoming Tasks</CardTitle>
+            <CardDescription>Tasks requiring your attention.</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               {recentTasks.length > 0 ? (
                 recentTasks.map(task => (
                   <div key={task.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-accent transition-colors">
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
                       <div className={cn(
-                        "h-2 w-2 rounded-full",
+                        "h-2 w-2 rounded-full shrink-0",
                         task.priority === 'high' ? "bg-destructive" : task.priority === 'medium' ? "bg-orange-500" : "bg-green-500"
                       )} />
-                      <span className="font-medium">{task.title}</span>
+                      <span className="font-medium truncate text-sm md:text-base">{task.title}</span>
                     </div>
-                    <div className="flex items-center gap-4">
-                      <span className="text-xs text-muted-foreground flex items-center gap-1">
+                    <div className="flex items-center gap-4 shrink-0">
+                      <span className="text-[10px] md:text-xs text-muted-foreground flex items-center gap-1">
                         <Clock className="h-3 w-3" /> {task.dueDate}
                       </span>
                     </div>
                   </div>
                 ))
               ) : (
-                <div className="text-center py-6 text-muted-foreground">
-                  No pending tasks. Great job!
+                <div className="text-center py-6 text-muted-foreground text-sm">
+                  Inbox zero! Enjoy your free time.
                 </div>
               )}
               <Button asChild variant="outline" className="w-full">
@@ -126,13 +126,13 @@ export default function Dashboard() {
             </div>
           </CardContent>
         </Card>
-        <Card className="col-span-3">
+        <Card className="lg:col-span-3">
           <CardHeader>
-            <CardTitle>Focus Mode</CardTitle>
-            <CardDescription>Ready for a deep study session?</CardDescription>
+            <CardTitle className="text-lg md:text-xl">Focus Mode</CardTitle>
+            <CardDescription>Start a deep study session.</CardDescription>
           </CardHeader>
-          <CardContent className="flex flex-col items-center justify-center pt-8">
-            <div className="h-32 w-32 rounded-full border-4 border-primary flex items-center justify-center text-4xl font-bold mb-6">
+          <CardContent className="flex flex-col items-center justify-center pt-4 md:pt-8">
+            <div className="h-28 w-28 md:h-32 md:w-32 rounded-full border-4 border-primary flex items-center justify-center text-2xl md:text-4xl font-bold mb-6">
               25:00
             </div>
             <Button asChild size="lg" className="w-full">

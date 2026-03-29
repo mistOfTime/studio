@@ -15,7 +15,8 @@ import {
   BrainCircuit,
   X,
   Upload,
-  Loader2
+  Loader2,
+  ChevronLeft
 } from "lucide-react"
 import { summarizeStudyNotes } from "@/ai/flows/summarize-study-notes"
 import { generateStudyAidsFromText } from "@/ai/flows/generate-study-aids-from-text"
@@ -149,9 +150,9 @@ export default function NotesPage() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto h-[calc(100vh-160px)] flex flex-col gap-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold">My Notes</h2>
+    <div className="max-w-6xl mx-auto h-[calc(100vh-140px)] flex flex-col gap-4 md:gap-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <h2 className="text-2xl md:text-3xl font-bold">My Notes</h2>
         <div className="flex gap-2">
           <input 
             type="file" 
@@ -160,18 +161,22 @@ export default function NotesPage() {
             className="hidden" 
             accept=".txt,.md,.text"
           />
-          <Button variant="outline" onClick={() => fileInputRef.current?.click()} disabled={isUploading}>
+          <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} disabled={isUploading} className="flex-1 sm:flex-none">
             {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
-            Upload File
+            <span className="hidden xs:inline">Upload</span>
           </Button>
-          <Button onClick={handleCreateNote}>
+          <Button onClick={handleCreateNote} size="sm" className="flex-1 sm:flex-none">
             <Plus className="mr-2 h-4 w-4" /> New Note
           </Button>
         </div>
       </div>
 
-      <div className="flex-1 grid grid-cols-1 md:grid-cols-4 gap-6 overflow-hidden">
-        <Card className="md:col-span-1 flex flex-col border-2">
+      <div className="flex-1 grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-6 overflow-hidden relative">
+        {/* Note List Sidebar - Hidden on mobile when a note is selected */}
+        <Card className={cn(
+          "md:col-span-1 flex flex-col border-2 overflow-hidden",
+          selectedNoteId && "hidden md:flex"
+        )}>
           <CardHeader className="p-4 border-b">
             <div className="relative group">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground transition-colors group-focus-within:text-primary" />
@@ -207,98 +212,104 @@ export default function NotesPage() {
             ))}
             {filteredNotes.length === 0 && (
               <div className="text-center py-8 text-muted-foreground text-xs italic">
-                No notes found matching your search.
+                No notes found.
               </div>
             )}
           </div>
         </Card>
 
-        <Card className="md:col-span-3 flex flex-col border-2 shadow-sm">
+        {/* Note Editor */}
+        <Card className={cn(
+          "md:col-span-3 flex flex-col border-2 shadow-sm h-full",
+          !selectedNoteId && "hidden md:flex"
+        )}>
           {selectedNote ? (
             <>
-              <CardHeader className="p-4 border-b flex flex-row items-center justify-between space-y-0 gap-4">
-                <div className="flex flex-col gap-1 flex-1 min-w-0">
-                  <Input 
-                    className="text-xl font-bold border-none p-0 h-auto focus-visible:ring-0 truncate" 
-                    value={selectedNote.title}
-                    placeholder="Enter note title..."
-                    onChange={(e) => updateNote(selectedNote.id, { title: e.target.value })}
-                  />
-                  <Input 
-                    className="text-xs h-auto border-none p-0 focus-visible:ring-0 text-muted-foreground font-medium" 
-                    value={selectedNote.subject}
-                    placeholder="Subject (e.g. History)"
-                    onChange={(e) => updateNote(selectedNote.id, { subject: e.target.value })}
-                  />
+              <CardHeader className="p-3 md:p-4 border-b flex flex-row items-center justify-between space-y-0 gap-2 md:gap-4">
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                  <Button variant="ghost" size="icon" className="md:hidden h-8 w-8" onClick={() => setSelectedNoteId(null)}>
+                    <ChevronLeft className="h-5 w-5" />
+                  </Button>
+                  <div className="flex flex-col gap-0.5 flex-1 min-w-0">
+                    <Input 
+                      className="text-lg font-bold border-none p-0 h-auto focus-visible:ring-0 truncate" 
+                      value={selectedNote.title}
+                      placeholder="Title..."
+                      onChange={(e) => updateNote(selectedNote.id, { title: e.target.value })}
+                    />
+                    <Input 
+                      className="text-[10px] h-auto border-none p-0 focus-visible:ring-0 text-muted-foreground font-medium" 
+                      value={selectedNote.subject}
+                      placeholder="Subject..."
+                      onChange={(e) => updateNote(selectedNote.id, { subject: e.target.value })}
+                    />
+                  </div>
                 </div>
-                <div className="flex items-center gap-1 md:gap-2">
+                <div className="flex items-center gap-1">
                   <Button 
                     variant="ghost" 
                     size="sm" 
                     onClick={handleSummarize}
                     disabled={isSummarizing || !selectedNote.content}
-                    className="flex"
-                    title="AI Summarize"
+                    className="h-8 px-2"
                   >
-                    <Sparkles className={cn("h-4 w-4 md:mr-2 text-primary", isSummarizing && "animate-spin")} />
-                    <span className="hidden sm:inline">Summarize</span>
+                    <Sparkles className={cn("h-4 w-4 text-primary", isSummarizing && "animate-spin")} />
+                    <span className="hidden lg:inline ml-2">Summarize</span>
                   </Button>
                   <Button 
                     variant="ghost" 
                     size="sm" 
                     onClick={handleGenerateStudyAids}
                     disabled={isGeneratingAids || !selectedNote.content}
-                    className="flex"
-                    title="Generate Study Aids"
+                    className="h-8 px-2"
                   >
-                    <BrainCircuit className={cn("h-4 w-4 md:mr-2 text-primary", isGeneratingAids && "animate-spin")} />
-                    <span className="hidden sm:inline">Gen Aids</span>
+                    <BrainCircuit className={cn("h-4 w-4 text-primary", isGeneratingAids && "animate-spin")} />
+                    <span className="hidden lg:inline ml-2">Gen Aids</span>
                   </Button>
                   
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10">
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10">
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </AlertDialogTrigger>
                     <AlertDialogContent>
                       <AlertDialogHeader>
-                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                        <AlertDialogTitle>Delete Note?</AlertDialogTitle>
                         <AlertDialogDescription>
-                          This action cannot be undone. This will permanently delete your note
-                          and remove it from our servers.
+                          This will permanently remove your note. This action cannot be undone.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
                         <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                          Delete Note
+                          Delete
                         </AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
                 </div>
               </CardHeader>
-              <CardContent className="flex-1 p-0 overflow-hidden relative">
+              <CardContent className="flex-1 p-0 overflow-hidden">
                 <Textarea 
-                  className="h-full w-full border-none focus-visible:ring-0 resize-none p-4 md:p-8 text-base leading-relaxed"
-                  placeholder="Start capturing your thoughts..."
+                  className="h-full w-full border-none focus-visible:ring-0 resize-none p-4 md:p-8 text-sm md:text-base leading-relaxed"
+                  placeholder="Start writing..."
                   value={selectedNote.content}
                   onChange={(e) => updateNote(selectedNote.id, { content: e.target.value })}
                 />
               </CardContent>
             </>
           ) : (
-            <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground p-12 bg-muted/10">
-              <FileText className="h-20 w-20 mb-6 opacity-10" />
-              <h3 className="text-lg font-medium mb-1">Your Workspace is Empty</h3>
-              <p className="text-sm max-w-[250px] text-center mb-6">Select an existing note, upload a file, or create a new one to start studying.</p>
-              <div className="flex gap-2">
+            <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground p-6 text-center">
+              <FileText className="h-16 w-16 mb-4 opacity-10" />
+              <h3 className="text-lg font-medium mb-1">Select or Create a Note</h3>
+              <p className="text-sm max-w-[200px] mb-6">Choose a note from the list or upload a file to start studying.</p>
+              <div className="flex flex-wrap justify-center gap-2">
                 <Button onClick={handleCreateNote} variant="outline" size="sm">
-                  <Plus className="h-4 w-4 mr-2" /> Create New
+                  <Plus className="h-4 w-4 mr-2" /> New Note
                 </Button>
                 <Button onClick={() => fileInputRef.current?.click()} variant="outline" size="sm">
-                  <Upload className="h-4 w-4 mr-2" /> Upload File
+                  <Upload className="h-4 w-4 mr-2" /> Upload
                 </Button>
               </div>
             </div>
