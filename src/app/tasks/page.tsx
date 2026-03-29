@@ -11,14 +11,15 @@ import {
   Plus, 
   Trash2, 
   Calendar as CalendarIcon, 
-  Sparkles
+  Sparkles,
+  Eraser
 } from "lucide-react"
 import { suggestTaskBreakdown } from "@/ai/flows/suggest-task-breakdown"
 import { useToast } from "@/hooks/use-toast"
 import { cn } from "@/lib/utils"
 
 export default function TaskManager() {
-  const { tasks, addTask, toggleTask, deleteTask, isLoaded } = useStudentData()
+  const { tasks, addTask, toggleTask, deleteTask, clearCompletedTasks, isLoaded } = useStudentData()
   const { toast } = useToast()
   const [newTitle, setNewTitle] = useState("")
   const [newPriority, setNewPriority] = useState<Task['priority']>("medium")
@@ -51,10 +52,23 @@ export default function TaskManager() {
     }
   }
 
+  const completedCount = tasks.filter(t => t.completed).length
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold">Task Manager</h2>
+        {completedCount > 0 && (
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={clearCompletedTasks}
+            className="text-muted-foreground hover:text-destructive"
+          >
+            <Eraser className="h-4 w-4 mr-2" />
+            Clear Completed ({completedCount})
+          </Button>
+        )}
       </div>
 
       <Card>

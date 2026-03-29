@@ -116,6 +116,10 @@ export function useStudentData() {
     saveData({ ...data, tasks: data.tasks.filter(t => t.id !== id) })
   }
 
+  const clearCompletedTasks = () => {
+    saveData({ ...data, tasks: data.tasks.filter(t => !t.completed) })
+  }
+
   // Sessions (Weekly)
   const addSession = (session: Omit<StudySession, 'id'>) => {
     const newSession = { ...session, id: Math.random().toString(36).substr(2, 9) }
@@ -192,7 +196,7 @@ export function useStudentData() {
       ...data,
       timerStats: {
         totalFocusMinutes: data.timerStats.totalFocusMinutes + minutes,
-        sessionsCompleted: data.sessionsCompleted + 1
+        sessionsCompleted: data.timerStats.sessionsCompleted + 1
       }
     })
   }
@@ -208,6 +212,7 @@ export function useStudentData() {
     addTask,
     toggleTask,
     deleteTask,
+    clearCompletedTasks,
     addSession,
     updateSession,
     deleteSession,
