@@ -1,14 +1,16 @@
 "use client"
 
 import { useState } from "react"
-import { useStudentData } from "@/hooks/use-student-data"
+import { useStudentData, StudySession } from "@/hooks/use-student-data"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { 
   Plus, 
   BookOpen, 
   Clock,
-  X
+  X,
+  CalendarDays,
+  Timer
 } from "lucide-react"
 import {
   Dialog,
@@ -16,6 +18,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -37,6 +40,7 @@ export default function PlannerPage() {
   const { toast } = useToast()
   
   const [isSessionDialogOpen, setIsSessionDialogOpen] = useState(false)
+  const [viewingSession, setViewingSession] = useState<StudySession | null>(null)
   
   // Recurring Session State
   const [newSubject, setNewSubject] = useState("")
@@ -68,6 +72,13 @@ export default function PlannerPage() {
     setNewDay(day.toString());
     setNewHour(hour.toString());
     setIsSessionDialogOpen(true);
+  }
+
+  const formatHour = (hourStr: string) => {
+    const hour = parseInt(hourStr.split(':')[0]);
+    if (hour === 0) return "12 AM";
+    if (hour === 12) return "12 PM";
+    return hour > 12 ? `${hour - 12} PM` : `${hour} AM`;
   }
 
   return (
@@ -117,7 +128,11 @@ export default function PlannerPage() {
 
                     <div className="relative z-10 flex flex-col gap-1 h-full pointer-events-none">
                       {hourSessions.map(session => (
-                        <div key={session.id} className="group/session relative bg-primary text-primary-foreground p-2 rounded-md text-[10px] shadow-sm animate-in fade-in zoom-in duration-200 pointer-events-auto flex-1 flex flex-col justify-between border border-primary-foreground/10">
+                        <div 
+                          key={session.id} 
+                          onClick={() => setViewingSession(session)}
+                          className="group/session relative bg-primary text-primary-foreground p-2 rounded-md text-[10px] shadow-sm animate-in fade-in zoom-in duration-200 pointer-events-auto flex-1 flex flex-col justify-between border border-primary-foreground/10 cursor-pointer hover:brightness-110 transition-all"
+                        >
                           <div className="font-bold flex items-center gap-1 mb-1 min-w-0">
                             <BookOpen className="h-3 w-3 shrink-0" /> 
                             <span className="truncate">{session.subject}</span>
@@ -146,6 +161,7 @@ export default function PlannerPage() {
         </div>
       </Card>
 
+      {/* Add Session Dialog */}
       <Dialog open={isSessionDialogOpen} onOpenChange={setIsSessionDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
@@ -183,6 +199,79 @@ export default function PlannerPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* View Session Details Dialog */}
+      <Dialog open={!!viewingSession} onOpenChange={(open) => !open && setViewingSession(null)}>
+        <DialogContent className="sm:max-w-[400px]">
+          {viewingSession && (
+            <>
+              <DialogHeader>
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="p-2 bg-primary/10 rounded-lg">
+                    <BookOpen className="h-5 w-5 text-primary" />
+                  </div>
+                  <Badge variant="outline" className="ml-auto">Study Session</Badge>
+                </div>
+                <DialogTitle className="text-2xl">{viewingSession.subject}</DialogTitle>
+                <DialogDescription>Session details and schedule.</DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-6 py-4">
+                <div className="flex items-center gap-4 p-3 border rounded-lg bg-muted/30">
+                  <CalendarDays className="h-5 w-5 text-muted-foreground" />
+                  <div className="flex flex-col">
+                    <span className="text-xs text-muted-foreground uppercase font-semibold">Day</span>
+                    <span className="font-medium">{DAYS[viewingSession.dayOfWeek]}</span>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex items-center gap-4 p-3 border rounded-lg bg-muted/30">
+                    <Clock className="h-5 w-5 text-muted-foreground" />
+                    <div className="flex flex-col">
+                      <span className="text-xs text-muted-foreground uppercase font-semibold">Time</span>
+                      <span className="font-medium">{formatHour(viewingSession.startTime)}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4 p-3 border rounded-lg bg-muted/30">
+                    <Timer className="h-5 w-5 text-muted-foreground" />
+                    <div className="flex flex-col">
+                      <span className="text-xs text-muted-foreground uppercase font-semibold">Duration</span>
+                      <span className="font-medium">{viewingSession.duration} Minutes</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <DialogFooter className="gap-2 sm:gap-0">
+                <Button 
+                  variant="destructive" 
+                  className="sm:mr-auto"
+                  onClick={() => {
+                    deleteSession(viewingSession.id);
+                    setViewingSession(null);
+                    toast({ title: "Session Deleted", description: "Successfully removed from schedule." });
+                  }}
+                >
+                  Delete Session
+                </Button>
+                <Button variant="secondary" onClick={() => setViewingSession(null)}>
+                  Close
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
+  )
+}
+
+function Badge({ children, variant = "default", className }: { children: React.ReactNode, variant?: "default" | "outline", className?: string }) {
+  return (
+    <span className={cn(
+      "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+      variant === "default" ? "border-transparent bg-primary text-primary-foreground" : "text-foreground",
+      className
+    )}>
+      {children}
+    </span>
   )
 }
