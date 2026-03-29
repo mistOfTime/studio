@@ -17,9 +17,11 @@ import {
   CheckCircle2,
   XCircle,
   RotateCcw,
-  BookOpen
+  BookOpen,
+  FileText
 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import Link from "next/link"
 
 export default function QuizPage() {
   const { quizzes = [], flashcards = [], isLoaded, addScore } = useStudentData()
@@ -257,10 +259,17 @@ export default function QuizPage() {
               ))}
             </div>
           ) : (
-            <div className="text-center py-20 border-2 border-dashed rounded-xl">
+            <div className="text-center py-20 border-2 border-dashed rounded-xl bg-muted/5">
               <Brain className="h-16 w-16 mx-auto mb-4 opacity-10" />
               <h3 className="text-lg font-semibold">No Quizzes Found</h3>
-              <p className="text-muted-foreground mb-6">Generate a quiz from your notes to get started.</p>
+              <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
+                Generate a quiz from your study notes to get started with AI-powered testing.
+              </p>
+              <Button asChild variant="outline">
+                <Link href="/notes">
+                  <FileText className="mr-2 h-4 w-4" /> Go to Notes
+                </Link>
+              </Button>
             </div>
           )}
         </TabsContent>
@@ -289,10 +298,17 @@ export default function QuizPage() {
               ))}
             </div>
           ) : (
-            <div className="text-center py-20 border-2 border-dashed rounded-xl">
+            <div className="text-center py-20 border-2 border-dashed rounded-xl bg-muted/5">
               <BookOpen className="h-16 w-16 mx-auto mb-4 opacity-10" />
               <h3 className="text-lg font-semibold">No Flashcards Found</h3>
-              <p className="text-muted-foreground mb-6">Generate flashcards from your notes to study smarter.</p>
+              <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
+                Turn your notes into flashcards instantly using AI to help you memorize key concepts.
+              </p>
+              <Button asChild variant="outline">
+                <Link href="/notes">
+                  <FileText className="mr-2 h-4 w-4" /> Go to Notes
+                </Link>
+              </Button>
             </div>
           )}
         </TabsContent>

@@ -14,7 +14,8 @@ import {
   Sparkles, 
   Search, 
   BrainCircuit,
-  X
+  X,
+  Type
 } from "lucide-react"
 import { summarizeStudyNotes } from "@/ai/flows/summarize-study-notes"
 import { generateStudyAidsFromText } from "@/ai/flows/generate-study-aids-from-text"
@@ -49,14 +50,11 @@ export default function NotesPage() {
   )
 
   const handleCreateNote = () => {
-    const newNoteId = Math.random().toString(36).substr(2, 9)
     addNote({
       title: "Untitled Note",
       subject: "General",
       content: ""
     })
-    // Note: Since addNote doesn't return the ID, we'll let the user click it in the sidebar
-    // but in a real app you'd return the ID or handle navigation.
   }
 
   const handleDelete = () => {
@@ -105,7 +103,7 @@ export default function NotesPage() {
 
       toast({ 
         title: "Study Aids Generated!", 
-        description: "A new quiz and flashcard set have been added to your collection." 
+        description: "New quiz and cards are ready in the Quiz & Flashcards section." 
       })
     } catch (e) {
       toast({ title: "Error", description: "Failed to generate study aids.", variant: "destructive" })
@@ -184,26 +182,28 @@ export default function NotesPage() {
                     onChange={(e) => updateNote(selectedNote.id, { subject: e.target.value })}
                   />
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1 md:gap-2">
                   <Button 
                     variant="ghost" 
                     size="sm" 
                     onClick={handleSummarize}
                     disabled={isSummarizing || !selectedNote.content}
-                    className="hidden sm:flex"
+                    className="flex"
+                    title="AI Summarize"
                   >
-                    <Sparkles className={cn("h-4 w-4 mr-2 text-primary", isSummarizing && "animate-spin")} />
-                    Summarize
+                    <Sparkles className={cn("h-4 w-4 md:mr-2 text-primary", isSummarizing && "animate-spin")} />
+                    <span className="hidden sm:inline">Summarize</span>
                   </Button>
                   <Button 
                     variant="ghost" 
                     size="sm" 
                     onClick={handleGenerateStudyAids}
                     disabled={isGeneratingAids || !selectedNote.content}
-                    className="hidden lg:flex"
+                    className="flex"
+                    title="Generate Study Aids"
                   >
-                    <BrainCircuit className={cn("h-4 w-4 mr-2 text-primary", isGeneratingAids && "animate-spin")} />
-                    Gen Aids
+                    <BrainCircuit className={cn("h-4 w-4 md:mr-2 text-primary", isGeneratingAids && "animate-spin")} />
+                    <span className="hidden sm:inline">Gen Aids</span>
                   </Button>
                   
                   <AlertDialog>
@@ -232,7 +232,7 @@ export default function NotesPage() {
               </CardHeader>
               <CardContent className="flex-1 p-0 overflow-hidden relative">
                 <Textarea 
-                  className="h-full w-full border-none focus-visible:ring-0 resize-none p-8 text-base leading-relaxed"
+                  className="h-full w-full border-none focus-visible:ring-0 resize-none p-4 md:p-8 text-base leading-relaxed"
                   placeholder="Start capturing your thoughts..."
                   value={selectedNote.content}
                   onChange={(e) => updateNote(selectedNote.id, { content: e.target.value })}
